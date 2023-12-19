@@ -93,7 +93,7 @@ def repeated_squaring(b,n,k):               #calculates (b^k)%n using repeated s
             a = (c*a)% n
     return a
 
-def text_to_nr(text):
+def text_to_nr(text):                       #transform text to nr
     val=0
     p=1
     for i in range(len(text)-1,-1,-1):
@@ -101,16 +101,16 @@ def text_to_nr(text):
         p=p*len(alphabet)
     return val
 
-def nr_to_text(nr,l):
+def nr_to_text(nr,l):                       #transform nr to text
     text=""
     for power in range(l - 1, -1, -1):
-        coeff = nr // (27 ** power)
+        coeff = nr // (len(alphabet) ** power)
         text+=alphabet[coeff]
-        nr =nr % 27 ** power
+        nr =nr % len(alphabet) ** power
     return text
 
 
-def find_power_range(n):
+def find_power_range(n):                          #find k and l where: 27^k<n<27^l
     lower_bound = math.floor(math.log(n, len(alphabet)))
     upper_bound = math.ceil(math.log(n, len(alphabet)))
     return lower_bound,upper_bound
