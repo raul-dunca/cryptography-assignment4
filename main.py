@@ -54,7 +54,6 @@ def binary(x):
     return power
 
 def extended_euclidian_algorithm(a,b):
-
     if euclidian(a,b)==1:
         u2=1
         u1=0
@@ -76,7 +75,6 @@ def extended_euclidian_algorithm(a,b):
         v=v2
 
         return d, u, v
-
 
 
 def repeated_squaring(b,n,k):               #calculates (b^k)%n using repeated squaring
@@ -115,24 +113,38 @@ def find_power_range(n):                          #find k and l where: 27^k<n<27
     upper_bound = math.ceil(math.log(n, len(alphabet)))
     return lower_bound,upper_bound
 
-def encrypt(m, public_key):
+def encrypt(message, public_key):
     n=public_key[0]
     e=public_key[1]
     k,l=find_power_range(n)
 
-    extra_spaces=len(m)%k
+    extra_spaces= (k - (len(message) % k)) % k
     if extra_spaces!=0:
         while extra_spaces:
-            m+="_"
+            message+= "_"
             extra_spaces-=1
     ciphertext=""
-    for i in range(0,len(m),k):
-        val_message=text_to_nr(m[i:i+k])
+    for i in range(0, len(message), k):
+        val_message=text_to_nr(message[i:i + k])
         rez=repeated_squaring(val_message,n,e)
         encrypted_text=nr_to_text(rez,l)
         ciphertext+=encrypted_text
 
-    return ciphertext
+    return ciphertext, message
+
+def decrypt(ciphertext, public_key, private_key):
+    n = public_key[0]
+    d = private_key
+    k, l = find_power_range(n)
+    plaintext = ""
+
+    for i in range(0,len(ciphertext),l):
+        val_ciphertext=text_to_nr(ciphertext[i:i+l])
+        rez=repeated_squaring(val_ciphertext, n, d)
+        decrypted_text = nr_to_text(rez, k)
+        plaintext+=decrypted_text
+
+    return plaintext
 
 def generate_keys():
     p, q = generate_prime(start, end)
@@ -140,23 +152,40 @@ def generate_keys():
     euler = euler_fun(p, q)
     e = generate_e(euler)
     d = extended_euclidian_algorithm(euler, e)[2]
+
+    # so its positive
+    while d < 0:
+        d += euler
+
     public_key = [n, e]
     private_key = d
     return public_key, private_key
 
+def validate_plaintext(plaintext):
+    if not all(char in alphabet for char in plaintext):
+        raise ValueError("Invalid characters in plaintext. Only characters in the alphabet are allowed.")
+
 alphabet = ['_','a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
-text=input("What do you want to encrypt: ")
-start=int(input("Enter the start of interval: "))
-end=int(input("Enter the end of interval: "))
 
-public_key,private_key=generate_keys()
-print(public_key)
-print(encrypt(text,public_key))
+try:
+    text=input("What do you want to encrypt: ")
+    validate_plaintext(text)
 
+    start=int(input("Enter the start of interval: "))
 
+    end=int(input("Enter the end of interval: "))
 
-#TODO decrypt function
-#TODO check if decrypted text is the same with initial text
-#TODO plain text validation?
+    public_key, private_key = generate_keys()
+    print("Public key is: "+str(public_key))
+    print("Private key is: "+str(private_key))
+
+    encrypted_message,message_with_spaces = encrypt(text, public_key)
+    print("Encrypted message is: "+encrypted_message)
+    decrypted_message = decrypt(encrypted_message, public_key, private_key)
+    print("Decrypted message is: "+decrypted_message)
+
+    assert message_with_spaces==decrypted_message
+except Exception as e:
+    print(e)
 
 
